@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>jlox</title>
+
+    <link rel="stylesheet" href="dist/reset.css">
+		<link rel="stylesheet" href="dist/reveal.css">
+		<link rel="stylesheet" href="dist/theme/night.css">
+        <link rel="stylesheet" href="plugin/highlight/monokai.css">
+    <style>
+        .size{
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="reveal">
+        <div class="slides">
+            <section class="pg1">
+                <h2>Practical Compiler Design </h2>
+                              
+                <h4>Implimenting jlox</h4>
+            </section>
+
+            <section class="pg2 size">
+                <h3>Whoami</h3>
+                <ul>
+                    <li>
+                        Sreedeep CV A.K.A Cripto
+                    </li>
+                    <li>
+                        wannabe reverse engineer
+                    </li>
+                    <li>
+                        Compiler Designer
+                    </li>
+                    <li>student
+
+                    </li>
+                </ul>
+            </section>
+
+            <section class="pg3 size">
+                <section>
+                    <h2>
+                        Lox basics
+                    </h2>
+                    <ul>
+                        <li>
+                        Lox is dynamically typed
+                        </li>
+                        <li>
+                            does automatic memory management
+                        </li>
+                        <li>
+                            Object-oriented
+                        </li>
+                    <li>
+                        <p>declare variables using var statements</p>
+                    </li></ul>
+                    <pre>
+                        <code class="java" data-trim >
+                            print “Hello lox” ;
+                            var a = “lox string” ;
+                    
+                    
+                        </code>
+                    </pre>
+                    <pre><code class="java" data-trim >
+                        var breakfast = "beignets";
+                        var beverage = "cafe au lait";
+                        breakfast = "beignets with " + beverage;
+                        print breakfast;
+                    </code>
+                    </pre>
+                </section>
+                <section>
+                    <p><h3>Datatypes</h3> </p>
+                    <ul>
+                        <li>Boolian</li>
+                        <li>Numbers</li>
+                        <li>Strings</li>
+                        <li>Nil</li>
+                        <p>Example:</p>
+                        <pre>
+                            <code class="java" >
+true;                          
+false;                        
+1234;  // An integer.
+12.34; // A decimal number
+"I am a string";
+"";    // The empty string.
+"123"; // This is a string, not a number.
+nil
+                            </code>
+                        </pre>
+
+                    </ul>
+
+                </section>
+                <section>
+                    <p><h3>Control Flow</h3></p>
+                    <ul>
+                        <li>If -else</li>
+                        <li>while loops</li>
+                    </ul>
+                    
+                    <pre><code class="java" data-trim >
+
+                        var i = 0;
+                        while(8>i)
+                        {
+                            print "Hello";
+                            i = i+1;
+                        }
+                    </code>
+                </pre>
+                <ul>
+                    <li>For loop</li>
+                </ul>
+                 <pre><code class="java" data-trim >
+                    var sum = 0;
+                    for(var i=0;i<101;i=i+1)
+                    {
+                        sum = sum +i;
+
+                    }
+                    print sum ;
+                </code>
+                </pre>
+                </section>
+
+            </section>
+
+            <section class="pg4 size">
+                <section>
+                    <h2>GRAMMAR</h2>
+                    <p >
+                        Each rule is a name, followed by an arrow (→), followed by a sequence of symbols, and finally ending with a semicolon (;).
+                    </p>
+                    <pre><code class="java" data-trim >
+                        breakfast  → protein "with" breakfast "on the side" ;
+                        breakfast  → protein ;
+                        breakfast  → bread ;
+                    
+                        protein    → crispiness "crispy" "bacon" ;
+                        protein    → "sausage" ;
+                        protein    → cooked "eggs" ;
+                    
+                        crispiness → "really" ;
+                        crispiness → "really" crispiness ;
+                    
+                        cooked     → "scrambled" ;
+                        cooked     → "poached" ;
+                        cooked     → "fried" ;
+                    
+                        bread      → "toast" ;
+                        bread      → "biscuits" ;
+                        bread      → "English muffin" ;
+                    
+                    </code>
+                    </pre>
+                </section>
+                <section>
+                    <img src="images/breakfast.png" alt="">
+                </section>
+                <section>
+                    <ul>
+                        <li><b>Literals.</b> Numbers, strings, Booleans, and nil.</li>
+
+                            <li><b>Unary expressions.</b> A prefix ! to perform a logical not, and - to negate a number.</li>
+                            
+                            <li><b>Binary expressions</b>. The infix arithmetic (+, -, *, /) and logic operators (==, !=, <, <=, >, >=) we know and love.</li>
+                            
+                            <li><b>Parentheses</b> A pair of ( and ) wrapped around an expression.</li>
+                            
+                            
+                    </ul>
+                </section>
+                <section>
+                    <pre><code class="java" data-trim >
+                    expression     → literal
+                                | unary
+                                | binary
+                                | grouping ;
+
+                    literal        → NUMBER | STRING | "true" | "false" | "nil" ;
+                    grouping       → "(" expression ")" ;
+                    unary          → ( "-" | "!" ) expression ;
+                    binary         → expression operator expression ;
+                    operator       → "==" | "!=" | "<" | "<=" | ">" | ">="
+                                | "+"  | "-"  | "*" | "/" ;
+            </code>
+            </pre>
+            
+                </section>
+            </section>
+
+            <section class="pg4 size">
+                <section>
+                    <h2>Scanner</h2>
+                    <!-- <p>Characters -> tokens</p> -->
+                    <p> scan through the list of characters and group them together into the smallest sequences that still represent something. Each of these blobs of characters is called a lexeme.</p>
+                    <pre><code class="java" data-trim >
+package com.craftinginterpreters.lox;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static com.craftinginterpreters.lox.TokenType.*; 
+
+class Scanner {
+  private final String source;
+  private final List<Token> tokens = new ArrayList<>();
+
+  Scanner(String source) {
+    this.source = source;
+  }
+}
+</code>
+</pre>
+                </section>
+                <section>
+                    <h2>
+                        Keywords
+
+                    </h2>
+                    <p>We define the set of reserved words in a map.
+
+                    </p>
+                    <pre><code class="java" data-trim >
+private static final Map<String, TokenType> keywords;
+static {
+    keywords = new HashMap<>();
+    keywords.put("and",    AND);
+    keywords.put("class",  CLASS);
+    keywords.put("else",   ELSE);
+    keywords.put("false",  FALSE);
+    keywords.put("for",    FOR);
+    keywords.put("fun",    FUN);
+    keywords.put("if",     IF);
+    keywords.put("nil",    NIL);
+    keywords.put("or",     OR);
+    keywords.put("print",  PRINT);
+    keywords.put("return", RETURN);
+    keywords.put("super",  SUPER);
+    keywords.put("this",   THIS);
+    keywords.put("true",   TRUE);
+    keywords.put("var",    VAR);
+    keywords.put("while",  WHILE);
+  }
+</code>
+</pre>
+                </section>
+            </section>
+            <section class="parser size">
+                <section>
+                    
+                    <h2>Parser</h2>
+                    <p>parser is a literal translation of the grammar rules straight into imperative code. Each rule becomes a function. The body of the rule translates to code</p>
+                    <ul>
+                        <li>
+                            Each rule produces a syntax tree and return it to the caller
+                        </li>
+                        <li>
+                            There are lots of similarity with scanner here we use tokens instead of lexemes
+                        </li>
+                    
+                    </ul>
+                </section>
+                <section>
+                    <h2>Recursive descent parser</h2>
+                    <p>
+                        A recursive descent parser is a literal translation of the grammar’s rules straight into imperative code. Each rule becomes a function. The body of the rule translates to code roughly like:
+<table>
+    
+                            <tr>
+                                <th>Grammar notation</th>	<th>Code representation</th>
+                            </tr>
+    <tr>
+        <td>Terminal</td>	<td>Code to match and consume a token</td></tr>
+        <tr>   <td>Nonterminal</td><td>	Call to that rule’s function</td></tr>
+        <tr> <td> |</td><td>	if or switch statement</td></tr>
+        <tr>  <td> * or +</td><td>	while or for loop</td></tr>
+        <tr> <td> ?	</td><td> if statement</td>
+    </tr>
+</table>
+
+
+                    </p>
+                </section>
+            </section>
+
+            <section>
+                <section class="size pg4">
+                    <h2>
+                        EVALUATING EXPRESSIONS  
+                    </h2>
+                    <ul>
+                        <li>
+                            Create Interpreter class which implements Expr and Stmt (visitor class)
+                        </li>
+                        <li>
+                            literal lokens are converted into a literal tree syntax node by parser .Now interpreter convert that into runtime value
+                        </li>
+                        <li>
+                            Interpreter do postorder tree traversal
+                        </li>
+                    </ul>
+                </section>
+            </section>
+
+            <section class="pg5 size">
+                <section>
+                    <h2>Function</h2>
+                    <ul>
+                        <li>
+                            Setup call method to make function call(parser)
+                        </li>
+                        <li>
+                            Finish call method to check for arguments
+                        </li>
+                        <li>
+                            Interpret function call (visitCallExpr)
+                        </li>
+                        <li>
+                            Crate loxCallable interface 
+                        </li>
+                        
+                    </ul>
+                </section>
+                <section>
+                    Function Declaraion
+                    <pre><code class="java" data-trim >
+                        funDecl        → "fun" function ;
+                        function       → IDENTIFIER "(" parameters? ")" block ;
+                        parameters     → IDENTIFIER ( "," IDENTIFIER )* ;
+
+                    </code>
+                    </pre>
+                </section>
+            </section>
+
+            <section class="Klass size">
+                <section>
+                    <h2>
+                        Classes
+                    </h2>
+                    <img src="images/circle.png" alt="">
+                </section>
+                <section>
+                    <ul>
+                        <p>1.Exposes a constructor to create and initialize new instances of the class </p>
+                        <p>
+                            2.Provides a way to store and access fields on instances
+                        </p>
+                        <p>
+                            3.Defines a set of methods shared by all instances of the class that operate on each instances’ state
+                        </p>
+                    </ul>
+                </section>
+                <section>
+                    <pre><code class="java" data-trim >
+                    private Stmt classDeclaration() {
+                        Token name = consume(IDENTIFIER, "Expect class name.");
+                        consume(LEFT_BRACE, "Expect '{' before class body.");
+                    
+                        List<Stmt.Function> methods = new ArrayList<>();
+                        while (!check(RIGHT_BRACE) && !isAtEnd()) {
+                          methods.add(function("method"));
+                        }
+                    
+                        consume(RIGHT_BRACE, "Expect '}' after class body.");
+                    
+                        return new Stmt.Class(name, methods);
+                      }
+                    </code>
+                    </pre>
+                </section>
+            </section>
+            <section class="pg7 size">
+                <section>
+                    <h2>
+                        Inheritance 
+                    </h2>
+                    <pre>
+                        <code class="java " data-trim>
+                            class Doughnut {
+                                cook() {
+                                  print "Fry until golden brown.";
+                                }
+                              }
+                              
+                              class BostonCream < Doughnut {
+                                cook() {
+                                  super.cook();
+                                  print "Pipe full of custard and coat with chocolate.";
+                                }
+                              }
+                              
+                              BostonCream().cook();
+                              
+                        </code>
+
+                        
+                    </pre>
+                    <pre>
+                        <code class="java" data-trim>
+                            Fry until golden brown.
+                            Pipe full of custard and coat with chocolate
+                        </code>
+                    </pre>
+                </section>
+                <section>
+                    <h2>using super keyword</h2>
+                    <img style="width: 80%;" src="images/master.png" alt="">
+                </section>
+            </section>
+
+            <section>
+                <section class="size">
+                    <ul>
+                        <li>tokens and lexing,</li>
+                        <li>   abstract syntax trees,</li>
+                        <li>   recursive descent parsing,</li>
+                        <li>   prefix and infix expressions,</li>
+                        <li>   runtime representation of objects,</li>
+                        <li>  interpreting code using the Visitor pattern,</li>
+                        <li>  lexical scope,</li>
+                        <li>   environment chains for storing variables,</li>
+                        <li>   control flow,</li>
+                        <li>   closures,</li>
+                        <li>   classes,</li>
+                            <li>   methods, and finally,</li>
+                            <li>   inheritance.</li>
+                    </ul>
+                </section>
+            </section>
+
+        </div>
+    </div>
+    <script src="dist/reveal.js"></script>
+		<script src="plugin/notes/notes.js"></script>
+		<script src="plugin/markdown/markdown.js"></script>
+		<script src="plugin/highlight/highlight.js"></script>
+		<script>
+			Reveal.initialize({
+				hash: true,
+				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
+			});
+		</script>
+</body>
+</html>

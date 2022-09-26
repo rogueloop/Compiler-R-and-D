@@ -79,20 +79,134 @@
 						</section>
 				</section>
 				<section>
+					<section>
+						<h2>Chunks of ByteCode </h2>
+						<ul>
+							<li>
+								structurally bytecode resembles machine code
+							</li>
+							<li>using “chunk” to refer to sequences of bytecode</li>
+							<li>
+								each instruction has a one-byte operation code
+							</li>
+							<pre>
+								<code class="c" data-trim data-line-numbers>
+									typedef struct {
+										int count;
+										int capacity;
+										uint8_t* code;
+									  } Chunk;
+								</code>
+							</pre>
+						</ul>
+					</section>
+					<section>
+							<img src="images/insert.png" alt=""  >
+					</section>
+					<section><img src="images/grow.png" alt="">
+						<p>1.Allocate a new array with more capacity.</p>
+						<p>2.Copy the existing elements from the old array to the new one.
+						</p>
+						<p>3.Store the new capacity.
+						</p>
+						<p>4.Delete the old array.
+						</p>
+						<p>5.Update code to point to the new array.
+						</p>
+						<p>6.Store the element in the new array now that there is room.
+						</p>
+						<p>
+							7.Update the count.
+
+						</p>
+					</section>
+					
+				</section>
+				<section>
 					<section data-transition="zoom-in fade-out">
 						<h2>Lexer or scanner</h2>
 						 <p> converts Source code  into tokens</p>
 						<img src="images/pipeline.png" alt="">
+
 						
 					</section data-transition="zoom-in fade-out">
 					<section>
-						<h2>A Lexical Grammar for Lox</h2>
+						<h2>Basic REPL
+							(read-evaluate-print-loop)</h2>
+						<pre>
+							<code class="c" data-trim data-line-numbers >
 
+								static void repl() {
+									char line[1024];
+									for (;;) {
+									printf("> ");
+								
+									if (!fgets(line, sizeof(line), stdin)) {
+										printf("\n");
+										break;
+									}
+								
+									interpret(line);
+									}
+								}
+
+								int main(int argc, const char* argv[]) {
+									initVM();
+								  
+									if (argc == 1) {
+									  repl();
+									} else if (argc == 2) {
+									  runFile(argv[1]);
+									} else {
+									  fprintf(stderr, "Usage: clox [path]\n");
+									  exit(64);
+									}
+								  
+									freeVM();
+									return 0;
+								  }
+								  
+							</code>
+						</pre>
+					</section>
+					<section>
+						<h2>A Lexer implimentation </h2>
+						<pre>
+							<code class="c">
+									#include "common.h"
+									#include "scanner.h"
+									
+									typedef struct {
+									  const char* start;
+									  const char* current;
+									  int line;
+									} Scanner;
+									
+									Scanner scanner;
+									
+							</code>
+						</pre>
+						<ul>
+							<li>
+							 The start pointer marks the beginning of the current lexeme being scanned, and current points to the current character being looked at.
+							</li>
+
+						</ul>
+						<img src="images/fields.png" alt="">
 					</section>
 				</section>
 				<section>
 					<section>
 						<h2>A virtual Machine</h2>
+						<ul>
+							<li>
+							simulated chip written in software that interprets the bytecode one instruction at a time
+							</li>
+							<li>
+						adds overhead, which is a key reason bytecode is slower than native code
+							</li>
+							
+					</ul>
 						<pre><code class="c" data-trim data-line-numbers>
 						#ifndef clox_vm_h
 						#define clox_vm_h
@@ -101,6 +215,10 @@
 						
 						typedef struct {
 						  Chunk* chunk;
+						  uint8_t* ip;
+						  Value stack[STACK_MAX];
+						  Value* stackTop;
+						
 						} VM;
 						
 						void initVM();
@@ -121,16 +239,7 @@
 						<img src="images/pipelineVM.png" alt="">
 					</section>
 				</section>
-				<section>
-					<h2>Chunks of ByteCode </h2>
-					<p> </p>
-					<section>
-							<img src="images/insert.png" alt=""  >
-					</section>
-					<section><img src="images/grow.png" alt="">
-					</section>
-					
-				</section>
+			
 				<section>
 					<section><h3>Compiling Expressions</h3>
 						<ul>							<li><p>Single-Pass Compilation</p>
